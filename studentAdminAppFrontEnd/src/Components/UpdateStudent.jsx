@@ -11,8 +11,8 @@ const UpdateStudent = () => {
     gender: "",
     phoneNumber: "",
   });
-
-  let navigate = useNavigate();
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,17 +35,44 @@ const UpdateStudent = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+    setErrors({
+      ...errors,
+      [e.target.name]: "", // Clear previous error message when user edits the field
+    });
+  };
+
+  const validateForm = () => {
+    let errors = {};
+    let isValid = true;
+
+    if (formData.firstName.length < 3) {
+      errors.firstName = "First Name must be at least 3 characters long";
+      isValid = false;
+    }
+
+    if (!/^\d{10}$/.test(formData.phoneNumber)) {
+      errors.phoneNumber = "Phone Number must be exactly 10 digits long";
+      isValid = false;
+    }
+
+    setErrors(errors);
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await axios.put(`http://localhost:8090/students/${studentId}`, formData);
-      alert("Student details updated successfully!");
-      navigate("/");
-    } catch (error) {
-      console.error("Error updating student details:", error);
-      alert("Failed to update student details. Please try again.");
+    if (validateForm()) {
+      try {
+        await axios.put(
+          `http://localhost:8090/students/${studentId}`,
+          formData
+        );
+        alert("Student details updated successfully!");
+        navigate("/");
+      } catch (error) {
+        console.error("Error updating student details:", error);
+        alert("Failed to update student details. Please try again.");
+      }
     }
   };
 
@@ -71,6 +98,9 @@ const UpdateStudent = () => {
             onChange={handleChange}
             required
           />
+          {errors.firstName && (
+            <div className="text-danger">{errors.firstName}</div>
+          )}
         </div>
         <div className="mb-3">
           <label htmlFor="lastName" className="form-label">
@@ -116,6 +146,9 @@ const UpdateStudent = () => {
             onChange={handleChange}
             required
           />
+          {errors.phoneNumber && (
+            <div className="text-danger">{errors.phoneNumber}</div>
+          )}
         </div>
         <div className="d-flex justify-content-end">
           <button type="submit" className="btn btn-primary">
